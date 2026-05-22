@@ -18,10 +18,11 @@ npm run build
 This will compile all React files and Tailwind styles into the `./dist` folder.
 
 ### 2. Deploy using Wrangler CLI
-Cloudflare's `wrangler` CLI compiles, runs, and deploys projects instantly. Simply execute:
+Cloudflare's `wrangler` CLI compiles, reviews, and deploys projects instantly. Since we have configured the `[assets]` directory in `wrangler.toml`, you can simply run:
 ```bash
-npx wrangler pages deploy dist --project-name=devanshi-world
+npx wrangler deploy
 ```
+*(Alternatively, you can deploy specifically as a Pages project: `npx wrangler pages deploy dist --project-name=devanshi-world`)*
 
 ### 3. Complete the login flow
 * If you aren't logged in, `wrangler` will open a browser window to securely authorize your Cloudflare Account.
