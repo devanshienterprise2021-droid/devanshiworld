@@ -189,7 +189,7 @@ export default function App() {
       <div id="promo-ticker" className="bg-emerald-800 text-stone-50 py-2 text-center text-xs font-semibold px-4 tracking-wide">
         <div className="mx-auto max-w-7xl flex items-center justify-center gap-1.5 flex-wrap">
           <Sparkles className="h-4.5 w-4.5 text-amber-300 shrink-0" />
-          <span>Innovative Toys for Happy Childhoods.</span>
+          <span>Special Offer: Free handknotted wool tag card custom monogramming with direct checkout orders.</span>
         </div>
       </div>
 
