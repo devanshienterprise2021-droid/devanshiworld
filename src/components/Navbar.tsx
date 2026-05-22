@@ -18,8 +18,8 @@ import { CATEGORIES_WITH_AGES } from "../data/toys";
 interface NavbarProps {
   cartItemsCount: number;
   onCartClick: () => void;
-  activeTab: "catalog" | "about" | "contact";
-  setActiveTab: (tab: "catalog" | "about" | "contact") => void;
+  activeTab: "catalog" | "about" | "contact" | "admin";
+  setActiveTab: (tab: "catalog" | "about" | "contact" | "admin") => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   selectedCategory: string;
@@ -27,6 +27,7 @@ interface NavbarProps {
   categories: string[];
   manufacturerInfo: ManufacturerAbout;
   onScrollToCatalog?: () => void;
+  isAdminSessionActive?: boolean;
 }
 
 export function Navbar({
@@ -40,6 +41,7 @@ export function Navbar({
   setSelectedCategory,
   manufacturerInfo,
   onScrollToCatalog,
+  isAdminSessionActive = false,
 }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -162,18 +164,6 @@ export function Navbar({
             </div>
 
             <button
-              id="nav-catalog"
-              onClick={() => handleCategorySelect("All Toys")}
-              className={`px-4 py-2 text-sm font-extrabold rounded-full transition-colors ${
-                activeTab === "catalog" && selectedCategory === "All Toys"
-                  ? "bg-emerald-100/80 text-emerald-855"
-                  : "text-stone-600 hover:text-stone-950 hover:bg-stone-100"
-              }`}
-            >
-              All Toys
-            </button>
-
-            <button
               id="nav-about"
               onClick={() => {
                 setActiveTab("about");
@@ -202,6 +192,24 @@ export function Navbar({
             >
               Contact Us
             </button>
+
+            {isAdminSessionActive && (
+              <button
+                id="nav-admin"
+                onClick={() => {
+                  setActiveTab("admin");
+                  setDropdownOpen(false);
+                }}
+                className={`px-4 py-2 text-sm font-extrabold rounded-full transition-colors flex items-center gap-1 border border-dashed ${
+                  activeTab === "admin"
+                    ? "bg-emerald-8 bg-emerald-800 text-stone-50 border-emerald-800 shadow-xs"
+                    : "text-emerald-700 hover:text-white hover:bg-emerald-600 border-emerald-300"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse shrink-0" />
+                <span>Admin Panel</span>
+              </button>
+            )}
           </nav>
 
           {/* Search bar inside header if on catalog tab */}
@@ -288,20 +296,6 @@ export function Navbar({
             <div className="flex gap-1.5">
               <button
                 onClick={() => {
-                  setSelectedCategory("All Toys");
-                  setActiveTab("catalog");
-                  setMobileMenuOpen(false);
-                }}
-                className={`flex-1 text-center py-2 rounded-xl text-xs font-bold border transition-colors ${
-                  activeTab === "catalog" && selectedCategory === "All Toys"
-                    ? "bg-emerald-600 text-white border-emerald-600"
-                    : "bg-white text-stone-600 border-stone-200"
-                }`}
-              >
-                All Toys Collection
-              </button>
-              <button
-                onClick={() => {
                   setActiveTab("about");
                   setMobileMenuOpen(false);
                 }}
@@ -327,6 +321,25 @@ export function Navbar({
                 Contact Us
               </button>
             </div>
+
+            {isAdminSessionActive && (
+              <div className="pt-1 px-1">
+                <button
+                  onClick={() => {
+                    setActiveTab("admin");
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-center py-2.5 rounded-xl text-xs font-black uppercase tracking-wider border transition-colors flex items-center justify-center gap-1.5 ${
+                    activeTab === "admin"
+                      ? "bg-emerald-800 text-white border-emerald-800"
+                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  }`}
+                >
+                  <Sparkles className="h-4 w-4 text-amber-500 animate-pulse shrink-0" />
+                  <span>Admin Workspace</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

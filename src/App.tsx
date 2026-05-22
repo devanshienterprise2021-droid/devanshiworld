@@ -7,19 +7,76 @@ import { AboutManufacturer } from "./components/AboutManufacturer";
 import { ContactUs } from "./components/ContactUs";
 import { CartDrawer } from "./components/CartDrawer";
 import { WhatsAppCheckoutModal } from "./components/WhatsAppCheckoutModal";
+import { AdminPanel } from "./components/AdminPanel";
 import { TOYS_CATALOG, MANUFACTURER_INFO } from "./data/toys";
 import { ToyProduct, CartItem, ToyReview } from "./types";
-import { Trees, Sparkles, Star, Package, Clock, ShieldCheck } from "lucide-react";
+import { Trees, Sparkles, Star, Package, Clock, ShieldCheck, Lock, Unlock, Key, ShieldAlert, Facebook, Instagram } from "lucide-react";
 
 export default function App() {
   // Navigation & view states
-  const [activeTab, setActiveTab] = useState<"catalog" | "about" | "contact">("catalog");
+  const [activeTab, setActiveTab] = useState<"catalog" | "about" | "contact" | "admin">("catalog");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   
-  // Product state containing deep catalog (allows live addition of reviews)
-  const [catalog, setCatalog] = useState<ToyProduct[]>(TOYS_CATALOG);
+  // Product state containing deep catalog (allows live addition of reviews and load from persistent browser storage)
+  const [catalog, setCatalog] = useState<ToyProduct[]>(() => {
+    const saved = localStorage.getItem("devanshi_world_catalog");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse saved product list", e);
+      }
+    }
+    return TOYS_CATALOG;
+  });
+  
   const [selectedProduct, setSelectedProduct] = useState<ToyProduct | null>(null);
+
+  // Administrative access session authorization states
+  const [isAdminSessionActive, setIsAdminSessionActive] = useState<boolean>(() => {
+    return localStorage.getItem("devanshi_world_admin_active") === "true";
+  });
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [passcode, setPasscode] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  const handleAdminLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    const normalized = passcode.trim();
+    if (normalized === "admin" || normalized === "9712174855") {
+      setIsAdminSessionActive(true);
+      localStorage.setItem("devanshi_world_admin_active", "true");
+      setPasscode("");
+      setIsLoginModalOpen(false);
+      setActiveTab("admin");
+    } else {
+      setLoginError("Invalid clearance key code. Please verify.");
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminSessionActive(false);
+    localStorage.removeItem("devanshi_world_admin_active");
+    if (activeTab === "admin") {
+      setActiveTab("catalog");
+    }
+  };
+
+  const handleAddProduct = (newProduct: ToyProduct) => {
+    const updated = [newProduct, ...catalog];
+    setCatalog(updated);
+    localStorage.setItem("devanshi_world_catalog", JSON.stringify(updated));
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    const updated = catalog.filter((p) => p.id !== productId);
+    setCatalog(updated);
+    localStorage.setItem("devanshi_world_catalog", JSON.stringify(updated));
+    // Clear product from cart items too so orders don't break
+    setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
+  };
 
   // Cart system states
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -205,6 +262,7 @@ export default function App() {
         setSelectedCategory={setSelectedCategory}
         categories={categoriesList}
         manufacturerInfo={MANUFACTURER_INFO}
+        isAdminSessionActive={isAdminSessionActive}
       />
 
       {/* Content Canvas */}
@@ -313,6 +371,14 @@ export default function App() {
         ) : activeTab === "about" ? (
           /* Detailed About / Manufacturing custom workshop view */
           <AboutManufacturer />
+        ) : activeTab === "admin" ? (
+          /* Direct web product formulation module */
+          <AdminPanel 
+            catalog={catalog}
+            onAddProduct={handleAddProduct}
+            onDeleteProduct={handleDeleteProduct}
+            onLogout={handleAdminLogout}
+          />
         ) : (
           /* Contact Us Page View */
           <ContactUs />
@@ -381,30 +447,193 @@ export default function App() {
                 </div>
               </div>
               <p className="text-xs text-stone-400 max-w-xs leading-normal">
-                Directly manufactured children's wooden block sets, handcrafted knit plushies, sensory clocks, and premium educational learning curves. Crafted for deep creative discovery since 2012.
+                We offer a wide range of high-quality toys including plastic educational toys, engaging indoor and outdoor games, and premium wooden toys. Our products are designed to support learning, creativity, physical activity, and overall child development through safe, durable, and innovative play experiences.
               </p>
+              <div className="flex items-center gap-3 pt-3">
+                <a 
+                  href="https://www.facebook.com/profile.php?id=61589540634540" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:scale-110 active:scale-95 transition-all outline-none rounded-full flex items-center justify-center shrink-0 cursor-pointer bg-[#1877F2] p-1.5 shadow-xs border border-[#1877F2]/20 hover:shadow-md"
+                  aria-label="Visit our Original Facebook Page"
+                >
+                  <svg className="h-4.5 w-4.5 fill-white text-white" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+                <a 
+                  href="https://www.instagram.com/devanshiworld_official/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:scale-110 active:scale-95 transition-all outline-none rounded-full flex items-center justify-center shrink-0 cursor-pointer bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] p-1.5 shadow-xs hover:shadow-md"
+                  aria-label="Visit our Original Instagram Profile"
+                >
+                  <svg className="h-4.5 w-4.5 text-white" stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </a>
+              </div>
             </div>
             <div>
-              <h5 className="text-xs font-black text-stone-200 uppercase tracking-widest mb-3">Our Standards</h5>
-              <ul className="text-xs space-y-1.5">
-                <li>🌲 FSC Certified Natural Beechwood</li>
-                <li>🥛 Saliva-Proof Organic Milk Pigments</li>
-                <li>🧶 GOTS Certified Knit Egyptian Cotton</li>
-                <li>🛡️ Compliant with EN71 European Safety Rules</li>
+              <h5 className="text-xs font-black text-stone-200 uppercase tracking-widest mb-3">Company</h5>
+              <ul className="text-xs space-y-2">
+                <li>
+                  <button
+                    onClick={() => {
+                      setActiveTab("catalog");
+                      setSelectedCategory("All Toys");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="text-stone-400 hover:text-emerald-500 transition-colors text-left font-medium cursor-pointer"
+                  >
+                    Home
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setActiveTab("catalog");
+                      setSelectedCategory("All Toys");
+                      setTimeout(() => {
+                        catalogAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
+                      }, 100);
+                    }}
+                    className="text-stone-400 hover:text-emerald-500 transition-colors text-left font-medium cursor-pointer"
+                  >
+                    All Toys
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setActiveTab("about");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="text-stone-400 hover:text-emerald-500 transition-colors text-left font-medium cursor-pointer"
+                  >
+                    About Us
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      setActiveTab("contact");
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="text-stone-400 hover:text-emerald-500 transition-colors text-left font-medium cursor-pointer"
+                  >
+                    Contact Us
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
               <h5 className="text-xs font-black text-stone-200 uppercase tracking-widest mb-3">Legal & Safe</h5>
               <p className="text-xs text-stone-400 leading-normal mb-2">
-                All order details are safely transmitted directly to our factory order desk over direct and encryption secure WhatsApp Messenger channels.
+                All order details are safely delivered directly from our factory to customer and encryption secure WhatsApp Messenger.
               </p>
-              <p className="text-[10px] text-stone-500">
-                &copy; {new Date().getFullYear()} Devanshi World. All Rights Reserved.
-              </p>
+              
+              <div className="flex items-center justify-between gap-4 mt-2 border-t border-stone-800 pt-2">
+                <p className="text-[10px] text-stone-500 font-medium">
+                  &copy; 2021 Devanshi World. All Rights Reserved.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isAdminSessionActive) {
+                      setActiveTab(activeTab === "admin" ? "catalog" : "admin");
+                    } else {
+                      setIsLoginModalOpen(true);
+                    }
+                  }}
+                  className="text-stone-700 hover:text-emerald-500 transition-colors p-1 rounded-md cursor-pointer"
+                  title="Workspace Administration Access"
+                >
+                  {isAdminSessionActive ? (
+                    <Unlock className="h-3.5 w-3.5" />
+                  ) : (
+                    <Lock className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Administrative authorization modal */}
+      {isLoginModalOpen && (
+        <div id="admin-auth-overlay" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/85 backdrop-blur-sm">
+          <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-stone-200 animate-none">
+            
+            <button
+              onClick={() => {
+                setIsLoginModalOpen(false);
+                setLoginError("");
+                setPasscode("");
+              }}
+              className="absolute top-4 right-4 text-stone-400 hover:text-stone-700 transition-colors p-1 text-sm font-bold cursor-pointer"
+            >
+              ✕
+            </button>
+
+            <div className="flex flex-col items-center text-center space-y-3.5 mt-2">
+              <div className="p-3 bg-emerald-50 rounded-full border border-emerald-100 text-emerald-800">
+                <Key className="h-6 w-6 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-sans text-sm font-black text-stone-900 uppercase tracking-wide">
+                  Manufacturer Control
+                </h3>
+                <p className="text-[11px] text-stone-500 mt-0.5">
+                  Enter authorization credentials to access blueprints.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAdminLoginSubmit} className="mt-6 space-y-4">
+              {loginError && (
+                <div className="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-semibold flex items-center gap-1.5 animate-none">
+                  <ShieldAlert className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 font-mono">
+                  Access Code (Type 'admin')
+                </label>
+                <input
+                  type="password"
+                  autoFocus
+                  required
+                  placeholder="••••••••"
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  className="w-full px-4.5 py-2.5 text-center text-sm rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/25 focus:border-emerald-500 font-mono font-bold tracking-widest text-stone-900"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-1.5 px-4 py-2.5 bg-stone-900 hover:bg-emerald-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                <Unlock className="h-3.5 w-3.5 shrink-0 text-stone-300" />
+                <span>Verify Credentials</span>
+              </button>
+            </form>
+
+            <div className="mt-5 pt-3.5 border-t border-stone-100 text-center">
+              <span className="text-[9px] font-mono text-stone-400 uppercase tracking-widest">
+                Protected by Sandbox EN71 Standards
+              </span>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
