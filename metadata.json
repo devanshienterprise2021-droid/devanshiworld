@@ -1,0 +1,6 @@
+{
+  "name": "Devanshi World",
+  "description": "Premium wholesale kids toys manufacturer catalog with secure WhatsApp checkout and a 50-unit minimum order value.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
